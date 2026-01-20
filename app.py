@@ -363,7 +363,12 @@ html {
 """, unsafe_allow_html=True)
 
 # gemini api key - loaded from .streamlit/secrets.toml
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+try:
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    GEMINI_CONFIGURED = True
+except KeyError:
+    GEMINI_CONFIGURED = False
+    st.error("⚠️ GEMINI_API_KEY not found in secrets. Please add it in Streamlit Cloud Settings → Secrets.")
 
 # load model and encoders
 @st.cache_resource
@@ -426,6 +431,8 @@ def normalize_skills(text):
 
 # gemini explanation function using shap values
 def get_explanation(pred, prob, contributions, shap_values_raw):
+    if not GEMINI_CONFIGURED:
+        return "⚠️ AI explanation unavailable - GEMINI_API_KEY not configured. Please add it in Streamlit Cloud Settings → Secrets."
     try:
         gemini = genai.GenerativeModel('models/gemini-2.5-flash')
         

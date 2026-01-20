@@ -482,6 +482,30 @@ Use bullet points. Be specific about percentages. Keep it professional."""
         response = gemini.generate_content(prompt)
         return response.text
     except Exception as e:
+        error_str = str(e).lower()
+        # Handle rate limit (429) or quota exceeded errors
+        if '429' in error_str or 'quota' in error_str or 'rate' in error_str or 'limit' in error_str:
+            # Fallback: Show SHAP values directly
+            result = "✅ SCREENED IN" if pred == 1 else "❌ SCREENED OUT"
+            fallback_text = f"""
+⚠️ **AI explanation unavailable** - Daily API limit reached (Free tier: ~20 requests/day)
+
+---
+
+**Prediction:** {result} with {prob*100:.1f}% confidence
+
+**📊 SHAP Analysis (Top Factors):**
+
+**Positive Factors (helped your score):**
+{pos_text}
+
+**Negative Factors (hurt your score):**
+{neg_text}
+
+---
+💡 *Tip: The AI explanation will be available again tomorrow when the limit resets.*
+"""
+            return fallback_text
         return f"Error: {str(e)}"
 
 # create shap bar plot - dark theme with teal/amber colors
